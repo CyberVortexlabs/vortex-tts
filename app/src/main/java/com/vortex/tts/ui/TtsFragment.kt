@@ -48,15 +48,15 @@ class TtsFragment : Fragment() {
 
     private var generatedFile: File? = null
     private var generatedFingerprint: String? = null
-    private var directVoice: String = VOICES.first()
-    private var pendingSaveAfterPermission = false
+    private var directVoice: String = VOICE_FEMALE
+    private var pendingDownloadAfterPermission = false
 
     private val writePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted && pendingSaveAfterPermission) saveCurrentAudioToMediaStore()
+        if (granted && pendingDownloadAfterPermission) saveCurrentAudioToMediaStore()
         else if (!granted) showStatus("مجوز ذخیره‌سازی داده نشد.", false)
-        pendingSaveAfterPermission = false
+        pendingDownloadAfterPermission = false
     }
 
     override fun onCreateView(
@@ -81,10 +81,11 @@ class TtsFragment : Fragment() {
             VOICES
         )
         binding.directVoiceSpinner.adapter = voiceAdapter
-        binding.directVoiceSpinner.setSelection(0, false)
+        binding.directVoiceSpinner.setSelection(VOICES.indexOf(VOICE_FEMALE).coerceAtLeast(0), false)
         binding.directVoiceSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 directVoice = VOICES[position]
+                syncVoiceChips(directVoice)
                 invalidateGeneratedAudio()
             }
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
@@ -103,9 +104,9 @@ class TtsFragment : Fragment() {
         binding.chipSerious.setOnClickListener { setStyle("با صدای آرام و جدی") }
         binding.chipWhisper.setOnClickListener { setStyle("به صورت نجوا") }
 
-        binding.voiceAutoChip.setOnClickListener { selectVoice("Kore") }
-        binding.voiceFemaleChip.setOnClickListener { selectVoice("Kore") }
-        binding.voiceMaleChip.setOnClickListener { selectVoice("Puck") }
+        binding.voiceAutoChip.setOnClickListener { selectVoice(VOICE_FEMALE, binding.voiceAutoChip.id) }
+        binding.voiceFemaleChip.setOnClickListener { selectVoice(VOICE_FEMALE, binding.voiceFemaleChip.id) }
+        binding.voiceMaleChip.setOnClickListener { selectVoice(VOICE_MALE, binding.voiceMaleChip.id) }
 
         binding.loudAutoChip.setOnClickListener { invalidateGeneratedAudio() }
         binding.loudNormalChip.setOnClickListener { invalidateGeneratedAudio() }
@@ -126,16 +127,13 @@ class TtsFragment : Fragment() {
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }
 
-        binding.playButton.setOnClickListener {
-            if (audioPlayer.isPlaying()) {
-                audioPlayer.stop()
-                binding.playButton.text = getString(R.string.play)
-            } else {
-                generateAndPlay()
-            }
-        }
+        // Generate only — no autoplay. The voice bubble appears when audio is ready.
+        binding.generateButton.setOnClickListener { generateOnly() }
 
-        binding.saveButton.setOnClickListener { generateAndSave() }
+        // Voice-message style bubble: user taps play explicitly.
+        binding.bubblePlayButton.setOnClickListener { toggleBubblePlayback() }
+
+        binding.downloadButton.setOnClickListener { downloadGenerated() }
         binding.changeKeyButton.setOnClickListener { (activity as? MainActivity)?.openKeyScreen() }
         loadAvailableModels()
     }
@@ -169,11 +167,35 @@ class TtsFragment : Fragment() {
         binding.styleEditText.setSelection(binding.styleEditText.text?.length ?: 0)
     }
 
-    private fun selectVoice(voice: String) {
+    /**
+     * Single source of truth for the voice sent to the API: always read the
+     * spinner's current selection (male -> Puck, female -> Kore). The cached
+     * [directVoice] is only a fallback for when the view is gone.
+     */
+    private fun selectedVoice(): String {
+        val spinnerVoice = _binding?.directVoiceSpinner?.selectedItem?.toString()
+        return if (spinnerVoice != null && spinnerVoice in VOICES) spinnerVoice else directVoice
+    }
+
+    private fun selectVoice(voice: String, chipId: Int) {
+        binding.voiceChips.check(chipId)
         val index = VOICES.indexOf(voice).coerceAtLeast(0)
         binding.directVoiceSpinner.setSelection(index, true)
         directVoice = voice
         invalidateGeneratedAudio()
+    }
+
+    private fun syncVoiceChips(voice: String) {
+        _binding?.let {
+            when (voice) {
+                VOICE_MALE, VOICE_MALE_ALT -> it.voiceChips.check(it.voiceMaleChip.id)
+                VOICE_FEMALE -> {
+                    // Keep "auto" checked if the user never picked a gender explicitly.
+                    if (it.voiceMaleChip.isChecked) it.voiceChips.check(it.voiceFemaleChip.id)
+                }
+                else -> Unit
+            }
+        }
     }
 
     private fun selectedModel(): String {
@@ -194,49 +216,79 @@ class TtsFragment : Fragment() {
         return listOf(style, loud, text).filter { it.isNotBlank() }.joinToString("\n")
     }
 
-    private fun generateAndPlay() {
+    /** Generate audio and reveal the voice bubble. Never auto-plays. */
+    private fun generateOnly() {
         if (binding.textEditText.text.isNullOrBlank()) {
             showStatus("متن ورودی خالی است.", false)
             return
         }
         viewLifecycleOwner.lifecycleScope.launch {
             val file = ensureGeneratedAudio() ?: return@launch
+            showVoiceBubble(file)
+            showStatus("صدای تولیدشده آماده است. برای شنیدن، پخش را بزنید.", true)
+        }
+    }
+
+    private fun toggleBubblePlayback() {
+        val file = generatedFile?.takeIf { it.exists() }
+        if (file == null) {
+            showStatus("ابتدا صدا را تولید کنید.", false)
+            return
+        }
+        if (audioPlayer.isPlaying()) {
+            audioPlayer.stop()
+            _binding?.bubblePlayButton?.text = getString(R.string.play)
+        } else {
             audioPlayer.play(
                 file = file,
                 onCompletion = {
-                    _binding?.playButton?.text = getString(R.string.play)
+                    _binding?.bubblePlayButton?.text = getString(R.string.play)
                 },
                 onError = {
                     _binding?.let {
-                        it.playButton.text = getString(R.string.play)
+                        it.bubblePlayButton.text = getString(R.string.play)
                         showStatus("پخش فایل صوتی با خطا مواجه شد.", false)
                     }
                 }
             )
-            binding.playButton.text = getString(R.string.stop)
+            _binding?.bubblePlayButton?.text = getString(R.string.stop)
         }
     }
 
-    private fun generateAndSave() {
-        if (binding.textEditText.text.isNullOrBlank()) {
-            showStatus("متن ورودی خالی است.", false)
+    private fun showVoiceBubble(file: File) {
+        _binding?.let {
+            it.voiceBubbleCard.visibility = View.VISIBLE
+            it.bubblePlayButton.text = getString(R.string.play)
+            it.bubbleTitle.text = getString(R.string.bubble_ready)
+            it.bubbleStatus.text = "${getString(R.string.bubble_tap_to_play)} • ${formatDuration(file)}"
+        }
+    }
+
+    private fun formatDuration(wavFile: File): String {
+        // 24kHz 16-bit mono => 48000 bytes of PCM per second (44-byte WAV header).
+        val seconds = ((wavFile.length() - 44).coerceAtLeast(0) / 48000).toInt()
+        return if (seconds >= 60) "%d:%02d".format(seconds / 60, seconds % 60)
+        else "%d ثانیه".format(seconds)
+    }
+
+    private fun downloadGenerated() {
+        val file = generatedFile?.takeIf { it.exists() }
+        if (file == null) {
+            showStatus("ابتدا صدا را تولید کنید.", false)
             return
         }
-        viewLifecycleOwner.lifecycleScope.launch {
-            val file = ensureGeneratedAudio() ?: return@launch
-            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
-                ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-            ) {
-                pendingSaveAfterPermission = true
-                writePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                return@launch
-            }
-            saveWav(file)
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
+            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+        ) {
+            pendingDownloadAfterPermission = true
+            writePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            return
         }
+        saveWav(file)
     }
 
     private fun saveCurrentAudioToMediaStore() {
-        generatedFile?.let { saveWav(it) }
+        generatedFile?.takeIf { it.exists() }?.let { saveWav(it) }
     }
 
     private fun saveWav(file: File) {
@@ -279,8 +331,8 @@ class TtsFragment : Fragment() {
                 }
             }
             withContext(Dispatchers.Main) {
-                result.onSuccess { showStatus("صدا در Downloads/VortexTTS ذخیره شد.", true) }
-                    .onFailure { showStatus("ذخیره صدا ناموفق بود.", false) }
+                result.onSuccess { showStatus("صدا در Downloads/VortexTTS دانلود شد.", true) }
+                    .onFailure { showStatus("دانلود صدا ناموفق بود.", false) }
             }
         }
     }
@@ -297,13 +349,14 @@ class TtsFragment : Fragment() {
             return null
         }
         val model = selectedModel()
-        val fingerprint = sha256("$model\u0000$directVoice\u0000$text")
+        val voice = selectedVoice()
+        val fingerprint = sha256("$model\u0000$voice\u0000$text")
         generatedFile?.takeIf { it.exists() && fingerprint == generatedFingerprint }?.let { return it }
 
         setBusy(true)
         showStatus("در حال تولید صدا…", null)
         return try {
-            when (val result = repository.generatePcm(key, model, text, directVoice)) {
+            when (val result = repository.generatePcm(key, model, text, voice)) {
                 is GeminiResult.Success -> {
                     if (result.value.isEmpty() || result.value.size % 2 != 0) {
                         showStatus("داده صوتی دریافتی معتبر نیست.", false)
@@ -315,7 +368,6 @@ class TtsFragment : Fragment() {
                         generatedFile?.takeIf { it != file }?.delete()
                         generatedFile = file
                         generatedFingerprint = fingerprint
-                        showStatus("صدای تولیدشده آماده است.", true)
                         file
                     }
                 }
@@ -331,13 +383,19 @@ class TtsFragment : Fragment() {
 
     private fun invalidateGeneratedAudio() {
         generatedFingerprint = null
+        audioPlayer.stop()
+        _binding?.let {
+            it.voiceBubbleCard.visibility = View.GONE
+            it.bubblePlayButton.text = getString(R.string.play)
+        }
     }
 
     private fun setBusy(busy: Boolean) {
         _binding?.let {
             it.ttsProgress.visibility = if (busy) View.VISIBLE else View.GONE
-            it.playButton.isEnabled = !busy
-            it.saveButton.isEnabled = !busy
+            it.generateButton.isEnabled = !busy
+            it.bubblePlayButton.isEnabled = !busy
+            it.downloadButton.isEnabled = !busy
             it.textEditText.isEnabled = !busy
             it.styleEditText.isEnabled = !busy
             it.modelSpinner.isEnabled = !busy
@@ -385,6 +443,9 @@ class TtsFragment : Fragment() {
     }
 
     companion object {
+        const val VOICE_FEMALE = "Kore"
+        const val VOICE_MALE = "Puck"
+        const val VOICE_MALE_ALT = "Charon"
         private val VOICES = listOf("Kore", "Puck", "Charon", "Fenrir", "Aoede", "Leda", "Orus", "Zephyr")
         fun newInstance() = TtsFragment()
     }

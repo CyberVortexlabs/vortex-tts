@@ -22,7 +22,10 @@
     <string name="model">مدل</string>
     <string name="play">پخش</string>
     <string name="stop">توقف</string>
-    <string name="save_audio">ذخیره صدا</string>
+    <string name="generate_audio">تولید صدا</string>
+    <string name="download_audio">دانلود صدا</string>
+    <string name="bubble_ready">پیام صوتی آماده است</string>
+    <string name="bubble_tap_to_play">برای شنیدن، پخش را بزنید</string>
     <string name="change_api_key">تغییر کلید API</string>
     <string name="generated_audio">صدای تولیدشده آماده است.</string>
     <string name="sample_happy">با لحن شاد</string>

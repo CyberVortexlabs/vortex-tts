@@ -32,7 +32,8 @@ class MainActivity : AppCompatActivity(), KeyFragment.Callbacks {
     }
 
     private fun showInitialScreen() {
-        if (secureStorage.getApiKey() != null) {
+        // Key screen stays the default entry; a saved key skips it smoothly.
+        if (!secureStorage.getApiKey().isNullOrBlank()) {
             showTts()
         } else {
             showKeyScreen()

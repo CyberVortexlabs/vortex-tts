@@ -47,6 +47,12 @@ class KeyFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         secureStorage = SecureStorage(requireContext())
         binding.apiKeyEditText.setText(secureStorage.getApiKey().orEmpty())
+        // Smooth UX: a previously saved key lets the user skip straight ahead
+        // without re-testing, while still allowing a fresh test anytime.
+        if (!secureStorage.getApiKey().isNullOrBlank()) {
+            binding.continueButton.visibility = View.VISIBLE
+            showStatus("کلید ذخیره‌شده یافت شد؛ می‌توانید ادامه دهید یا اتصال را دوباره تست کنید.", true)
+        }
         binding.testButton.setOnClickListener { testConnection() }
         binding.continueButton.setOnClickListener {
             if (secureStorage.getApiKey().isNullOrBlank()) {
