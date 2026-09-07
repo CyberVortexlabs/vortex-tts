@@ -164,8 +164,6 @@
                     android:value="0.8"
                     android:valueFrom="0.0"
                     android:valueTo="1.0"
-                    app:activeTrackColor="@color/vortex_purple"
-                    app:inactiveTrackColor="#33FFFFFF"
                     app:thumbColor="@color/vortex_purple" />
 
             </LinearLayout>
