@@ -60,6 +60,8 @@ class GeminiRepository(private val api: GeminiApi) {
         voiceName: String
     ): GeminiResult<ByteArray> = withContext(Dispatchers.IO) {
         try {
+            val isPersian = Regex("[\u0600-\u06FF]").containsMatchIn(text)
+            val languageCode = if (isPersian) "fa-IR" else null
             val request = GenerateContentRequest(
                 contents = listOf(ContentRequest(parts = listOf(TextPart(text)))),
                 generationConfig = GenerationConfig(
@@ -67,7 +69,8 @@ class GeminiRepository(private val api: GeminiApi) {
                     speechConfig = SpeechConfig(
                         voiceConfig = VoiceConfig(
                             prebuiltVoiceConfig = PrebuiltVoiceConfig(voiceName)
-                        )
+                        ),
+                        languageCode = languageCode
                     )
                 )
             )

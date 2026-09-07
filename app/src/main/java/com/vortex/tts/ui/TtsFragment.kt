@@ -218,14 +218,19 @@ class TtsFragment : Fragment() {
     }
 
     private fun finalPrompt(): String {
-        val text = binding.textEditText.text?.toString().orEmpty()
+        val rawText = binding.textEditText.text?.toString().orEmpty()
         val style = binding.styleEditText.text?.toString()?.trim().orEmpty()
         val loud = when {
             binding.loudLoudChip.isChecked -> "با صدای بلند و پرانرژی بخوان."
             else -> ""
         }
+        // Persian accent hint: if text contains Persian chars, prepend natural Persian prompt
+        val persianRegex = Regex("[\u0600-\u06FF]")
+        val text = if (persianRegex.containsMatchIn(rawText)) "با لحجه فارسی طبیعی و روان بخوان: $rawText" else rawText
         return listOf(style, loud, text).filter { it.isNotBlank() }.joinToString("\n")
     }
+
+    private fun containsPersian(s: String): Boolean = Regex("[\u0600-\u06FF]").containsMatchIn(s)
 
     /** Generate audio and reveal the voice bubble. Never auto-plays. */
     private fun generateOnly() {
@@ -323,7 +328,7 @@ class TtsFragment : Fragment() {
                     val values = ContentValues().apply {
                         put(MediaStore.Downloads.DISPLAY_NAME, fileName)
                         put(MediaStore.Downloads.MIME_TYPE, effectiveMime)
-                        put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/VortexTTS")
+                        put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
                         put(MediaStore.Downloads.IS_PENDING, 1)
                     }
                     val resolver = requireContext().contentResolver
@@ -342,17 +347,14 @@ class TtsFragment : Fragment() {
                         throw e
                     }
                 } else {
-                    val directory = File(
-                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                        "VortexTTS"
-                    ).apply { mkdirs() }
+                    val directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                     val destination = File(directory, fileName)
                     FileOutputStream(destination).use { it.write(mp3Bytes) }
                     Uri.fromFile(destination)
                 }
             }
             withContext(Dispatchers.Main) {
-                result.onSuccess { showStatus("صدا در Downloads/VortexTTS دانلود شد (MP3).", true) }
+                result.onSuccess { showStatus("صدا در Downloads دانلود شد (MP3).", true) }
                     .onFailure { showStatus("دانلود صدا ناموفق بود: ${it.message}", false) }
             }
         }

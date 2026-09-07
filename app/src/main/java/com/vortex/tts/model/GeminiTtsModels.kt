@@ -21,7 +21,8 @@ data class GenerationConfig(
 )
 
 data class SpeechConfig(
-    @SerializedName("voiceConfig") val voiceConfig: VoiceConfig
+    @SerializedName("voiceConfig") val voiceConfig: VoiceConfig,
+    @SerializedName("languageCode") val languageCode: String? = null
 )
 
 data class VoiceConfig(
