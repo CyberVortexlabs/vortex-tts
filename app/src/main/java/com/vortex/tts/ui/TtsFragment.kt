@@ -111,7 +111,7 @@ class TtsFragment : Fragment() {
         binding.chipSerious.setOnClickListener { setStyle("با صدای آرام و جدی") }
         binding.chipWhisper.setOnClickListener { setStyle("به صورت نجوا") }
 
-        // Voice mapping: male -> Puck, female/auto -> Kore
+        // Voice mapping: male -> Charon (deep), female/auto -> Kore
         binding.voiceAutoChip.setOnClickListener { selectVoice(VOICE_FEMALE, binding.voiceAutoChip.id) }
         binding.voiceFemaleChip.setOnClickListener { selectVoice(VOICE_FEMALE, binding.voiceFemaleChip.id) }
         binding.voiceMaleChip.setOnClickListener { selectVoice(VOICE_MALE, binding.voiceMaleChip.id) }
@@ -177,7 +177,7 @@ class TtsFragment : Fragment() {
 
     /**
      * Single source of truth for the voice sent to the API: always read the
-     * spinner's current selection (male -> Puck, female/auto -> Kore). The cached
+     * spinner's current selection (male -> Charon deep, female/auto -> Kore). The cached
      * [directVoice] is only a fallback for when the view is gone.
      */
     private fun selectedVoice(): String {
@@ -224,10 +224,14 @@ class TtsFragment : Fragment() {
             binding.loudLoudChip.isChecked -> "با صدای بلند و پرانرژی بخوان."
             else -> ""
         }
+        // Deep male voice hint when male selected (Charon/Fenrir/Puck are male voices)
+        val voice = selectedVoice()
+        val isMale = voice == VOICE_MALE || voice == VOICE_MALE_ALT || voice == "Charon" || voice == "Fenrir"
+        val deepMaleHint = if (isMale) "با صدای مردانه کلفت و بم" else ""
         // Persian accent hint: if text contains Persian chars, prepend natural Persian prompt
         val persianRegex = Regex("[\u0600-\u06FF]")
         val text = if (persianRegex.containsMatchIn(rawText)) "با لحجه فارسی طبیعی و روان بخوان: $rawText" else rawText
-        return listOf(style, loud, text).filter { it.isNotBlank() }.joinToString("\n")
+        return listOf(style, loud, deepMaleHint, text).filter { it.isNotBlank() }.joinToString("\n")
     }
 
     private fun containsPersian(s: String): Boolean = Regex("[\u0600-\u06FF]").containsMatchIn(s)
@@ -468,9 +472,9 @@ class TtsFragment : Fragment() {
 
     companion object {
         const val VOICE_FEMALE = "Kore"
-        const val VOICE_MALE = "Puck"
-        const val VOICE_MALE_ALT = "Charon"
-        private val VOICES = listOf("Kore", "Puck", "Charon", "Fenrir", "Aoede", "Leda", "Orus", "Zephyr")
+        const val VOICE_MALE = "Charon"
+        const val VOICE_MALE_ALT = "Puck"
+        private val VOICES = listOf("Kore", "Charon", "Puck", "Fenrir", "Aoede", "Leda", "Orus", "Zephyr")
         fun newInstance() = TtsFragment()
     }
 }
