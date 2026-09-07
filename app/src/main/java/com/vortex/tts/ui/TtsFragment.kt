@@ -22,6 +22,7 @@ import com.vortex.tts.R
 import com.vortex.tts.audio.AudioPlayer
 import com.vortex.tts.audio.Mp3Encoder
 import com.vortex.tts.audio.PcmToWav
+import com.vortex.tts.data.ApiKeyEntry
 import com.vortex.tts.data.GeminiClient
 import com.vortex.tts.data.GeminiError
 import com.vortex.tts.data.GeminiRepository
@@ -51,6 +52,7 @@ class TtsFragment : Fragment() {
     private var generatedFingerprint: String? = null
     private var directVoice: String = GeminiVoices.DEFAULT_VOICE
     private var pendingDownloadAfterPermission = false
+    private var isSpinnerInit = false
 
     private val writePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -74,12 +76,53 @@ class TtsFragment : Fragment() {
         secureStorage = SecureStorage(requireContext())
         setupUi()
         updateKeyWarning()
+        refreshKeySelector()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshKeySelector()
+        updateKeyWarning()
     }
 
     private fun updateKeyWarning() {
-        val hasKey = !secureStorage.getApiKey().isNullOrBlank()
+        val hasKey = !secureStorage.getActiveApiKey().isNullOrBlank()
         _binding?.keyWarning?.visibility = if (hasKey) View.GONE else View.VISIBLE
     }
+
+    private fun refreshKeySelector() {
+        val keys = secureStorage.getApiKeys()
+        val activeId = secureStorage.getActiveKeyId()
+        if (keys.isEmpty()) {
+            binding.keySelectorSpinner.visibility = View.GONE
+            binding.keySelectorLabel.visibility = View.GONE
+            return
+        }
+        binding.keySelectorSpinner.visibility = View.VISIBLE
+        binding.keySelectorLabel.visibility = View.VISIBLE
+        val names = keys.map { it.name }
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, names)
+        binding.keySelectorSpinner.adapter = adapter
+        val activeIndex = keys.indexOfFirst { it.id == activeId }.coerceAtLeast(0)
+        isSpinnerInit = false
+        binding.keySelectorSpinner.setSelection(activeIndex, false)
+        binding.keySelectorSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (!isSpinnerInit) { isSpinnerInit = true; return }
+                val selected = keys.getOrNull(position) ?: return
+                secureStorage.setActiveKeyId(selected.id)
+                updateKeyWarning()
+                loadAvailableModels()
+                invalidateGeneratedAudio()
+                showStatus("کلید فعال: ${selected.name}", true)
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+        }
+        // Ensure initial active is set
+        isSpinnerInit = true
+    }
+
+    private fun activeKey(): String? = secureStorage.getActiveApiKey() ?: secureStorage.getApiKey()
 
     private fun setupUi() {
         val voiceAdapter = ArrayAdapter(
@@ -131,19 +174,15 @@ class TtsFragment : Fragment() {
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }
 
-        // Generate only — no autoplay. The voice bubble appears when audio is ready.
         binding.generateButton.setOnClickListener { generateOnly() }
-
-        // Voice-message style bubble: user taps play explicitly.
         binding.bubblePlayButton.setOnClickListener { toggleBubblePlayback() }
-
         binding.downloadButton.setOnClickListener { downloadGenerated() }
         binding.changeKeyButton.setOnClickListener { (activity as? MainActivity)?.openKeyScreen() }
         loadAvailableModels()
     }
 
     private fun loadAvailableModels() {
-        val key = secureStorage.getApiKey() ?: return
+        val key = activeKey() ?: return
         viewLifecycleOwner.lifecycleScope.launch {
             when (val result = repository.listAvailableTtsModels(key)) {
                 is GeminiResult.Success -> {
@@ -205,14 +244,12 @@ class TtsFragment : Fragment() {
             showPreviewStatus("پخش متوقف شد.", true)
             return
         }
-        // Offline-first: try bundled raw asset, fallback to network only if missing
         previewPlayer.stop()
         audioPlayer.stop()
         val voice = selectedVoice()
         val resName = GeminiVoices.rawResName(voice)
         val resId = resources.getIdentifier(resName, "raw", requireContext().packageName)
         if (resId != 0) {
-            // Play bundled offline preview immediately, no API key needed
             setPreviewBusy(false)
             showPreviewStatus("پیش‌نمایش $voice (آفلاین) در حال پخش…", true)
             previewPlayer.playRaw(
@@ -229,11 +266,9 @@ class TtsFragment : Fragment() {
                 }
             )
             _binding?.previewVoiceButton?.text = getString(R.string.stop)
-            // Toggle to stop on next click
             return
         }
-        // Fallback: generate via Gemini API if no bundled asset (requires key)
-        val key = secureStorage.getApiKey()
+        val key = activeKey()
         if (key.isNullOrBlank()) {
             showPreviewStatus("پیش‌نمایش آفلاین یافت نشد و کلید API تنظیم نشده.", false)
             return
@@ -310,7 +345,6 @@ class TtsFragment : Fragment() {
         }
     }
 
-    /** Generate audio and reveal the voice bubble. Never auto-plays. */
     private fun generateOnly() {
         if (binding.textEditText.text.isNullOrBlank()) {
             showStatus("متن ورودی خالی است.", false)
@@ -432,7 +466,7 @@ class TtsFragment : Fragment() {
     }
 
     private suspend fun ensureGeneratedAudio(): File? {
-        val key = secureStorage.getApiKey()
+        val key = activeKey()
         if (key.isNullOrBlank()) {
             showStatus("کلید API پیدا نشد. از بخش تنظیمات کلید را وارد کنید.", false)
             updateKeyWarning()
@@ -497,6 +531,7 @@ class TtsFragment : Fragment() {
             it.modelSpinner.isEnabled = !busy
             it.directVoiceSpinner.isEnabled = !busy
             it.previewVoiceButton.isEnabled = !busy
+            it.keySelectorSpinner.isEnabled = !busy
         }
     }
 

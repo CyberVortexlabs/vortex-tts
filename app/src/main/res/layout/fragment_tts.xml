@@ -87,6 +87,32 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:padding="12dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_glass_card">
+
+                <TextView
+                    android:id="@+id/keySelectorLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="کلید فعال"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/vazirmatn_bold"
+                    android:textColor="@color/cosmic_text" />
+
+                <Spinner
+                    android:id="@+id/keySelectorSpinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_secondary_button"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:orientation="vertical"
                 android:padding="16dp"

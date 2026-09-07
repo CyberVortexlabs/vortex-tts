@@ -86,10 +86,30 @@
                 android:background="@drawable/bg_glass_card">
 
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/keyNameLayout"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="نام کلید"
+                    app:boxCornerRadiusTopStart="16dp"
+                    app:boxCornerRadiusTopEnd="16dp"
+                    app:boxCornerRadiusBottomStart="16dp"
+                    app:boxCornerRadiusBottomEnd="16dp">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/keyNameEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text|textNoSuggestions"
+                        android:fontFamily="@font/vazirmatn_regular"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/apiKeyLayout"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
                     android:hint="@string/gemini_api_key"
                     app:endIconMode="password_toggle"
                     app:boxCornerRadiusTopStart="16dp"
@@ -143,6 +163,18 @@
                     android:textColor="@color/cosmic_text"
                     android:background="@drawable/bg_primary_button" />
 
+                <Button
+                    android:id="@+id/cancelEditButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="10dp"
+                    android:text="لغو ویرایش"
+                    android:visibility="gone"
+                    android:textAllCaps="false"
+                    android:fontFamily="@font/vazirmatn_bold"
+                    android:textColor="@color/cosmic_text"
+                    android:background="@drawable/bg_secondary_button" />
+
                 <LinearLayout
                     android:id="@+id/modelsContainer"
                     android:layout_width="match_parent"
@@ -166,19 +198,65 @@
                         android:layout_marginTop="10dp"
                         android:orientation="vertical" />
                 </LinearLayout>
-
-                <Button
-                    android:id="@+id/continueButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:layout_marginTop="18dp"
-                    android:text="@string/continue_to_tts"
-                    android:textAllCaps="false"
-                    android:visibility="gone"
-                    android:fontFamily="@font/vazirmatn_bold"
-                    android:textColor="@color/cosmic_text"
-                    android:background="@drawable/bg_secondary_button" />
             </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/keysContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:padding="16dp"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:background="@drawable/bg_glass_card">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="کلیدهای ذخیره‌شده"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/vazirmatn_bold"
+                    android:textColor="@color/cosmic_text" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="برای فعال‌سازی روی کارت بزنید"
+                    android:textSize="11sp"
+                    android:fontFamily="@font/vazirmatn_regular"
+                    android:textColor="@color/cosmic_text_secondary" />
+
+                <TextView
+                    android:id="@+id/emptyKeysText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="هنوز کلیدی ذخیره نشده"
+                    android:visibility="gone"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/vazirmatn_regular"
+                    android:textColor="@color/cosmic_text_secondary" />
+
+                <LinearLayout
+                    android:id="@+id/keysList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/continueButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="18dp"
+                android:text="@string/continue_to_tts"
+                android:textAllCaps="false"
+                android:visibility="gone"
+                android:fontFamily="@font/vazirmatn_bold"
+                android:textColor="@color/cosmic_text"
+                android:background="@drawable/bg_secondary_button" />
         </LinearLayout>
     </ScrollView>
 </FrameLayout>
