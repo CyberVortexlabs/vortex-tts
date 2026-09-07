@@ -7,7 +7,6 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -28,36 +27,12 @@ class TtsFragment : Fragment() {
         _b = FragmentTtsBinding.inflate(inflater, container, false)
         val prefs = SecurePrefsManager(requireContext())
         val repo = TtsRepository(requireContext())
-        val api = ApiService()
 
-        // Model spinner (if exists) else use prefs default
-        val models = TtsModels.ALL
-        try {
-            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, models)
-            b.spinnerModel?.adapter = adapter
-            b.spinnerModel?.setSelection(models.indexOf(prefs.getModel()).coerceAtLeast(0))
-            b.spinnerModel?.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(p: android.widget.AdapterView<*>?, v: View?, pos: Int, id: Long) { prefs.saveModel(models[pos]) }
-                override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
-            }
-        } catch (_: Exception) {}
-
-        // Voice chips: map auto/female/male to actual voice names
         fun voiceFor(mode: String): String = when(mode) {
             "female" -> "Kore"
             "male" -> "Puck"
             else -> prefs.getVoice()
         }
-        // Voice dropdown if exists
-        try {
-            val vAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, TtsVoice.names)
-            b.spinnerVoice?.adapter = vAdapter
-            b.spinnerVoice?.setSelection(TtsVoice.names.indexOf(prefs.getVoice()).coerceAtLeast(0))
-            b.spinnerVoice?.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(p: android.widget.AdapterView<*>?, v: View?, pos: Int, id: Long) { prefs.saveVoice(TtsVoice.names[pos]) }
-                override fun onNothingSelected(p: android.widget.AdapterView<*>?) {}
-            }
-        } catch (_: Exception) {}
 
         b.etTtsText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -85,14 +60,12 @@ class TtsFragment : Fragment() {
         b.btnPlay.setOnClickListener {
             val text = b.etTtsText.text.toString().trim()
             if (text.isBlank()) { Toast.makeText(requireContext(), "متن خالی است", Toast.LENGTH_SHORT).show(); return@setOnClickListener }
-            val style = try { b.etStylePrompt?.text?.toString()?.trim()?.takeIf { it.isNotBlank() } } catch (_: Exception) { null }
-            val model = try { b.spinnerModel?.selectedItem?.toString() ?: prefs.getModel() } catch (_: Exception) { prefs.getModel() }
-            val voice = if (voiceMode == "auto") (try { b.spinnerVoice?.selectedItem?.toString() ?: prefs.getVoice() } catch(_: Exception){ prefs.getVoice() }) else voiceFor(voiceMode)
+            val style = b.etStylePrompt.text?.toString()?.trim()?.takeIf { it.isNotBlank() }
+            val model = prefs.getModel()
+            val voice = if (voiceMode == "auto") prefs.getVoice() else voiceFor(voiceMode)
 
             b.progressTts.visibility = View.VISIBLE
             b.btnPlay.isEnabled = false
-            b.tvTtsStatus.text = "در حال تولید…"
-            b.tvTtsStatus.visibility = View.VISIBLE
 
             lifecycleScope.launch {
                 try {
@@ -102,32 +75,27 @@ class TtsFragment : Fragment() {
                     if (res.isSuccess) {
                         val r = res.getOrNull()!!
                         lastFile = r.mp3 ?: r.wav
-                        b.tvTtsStatus.text = "✓ تولید شد: ${lastFile!!.name} (${lastFile!!.length()/1024}KB) — ذخیره: ${r.savedUri ?: "cache"}"
-                        // Auto playback via MediaPlayer
+                        Toast.makeText(requireContext(), "✓ توليد شد: ${lastFile!!.name}", Toast.LENGTH_SHORT).show()
                         try {
                             player?.release()
                             player = MediaPlayer().apply { setDataSource(lastFile!!.absolutePath); prepare(); start() }
-                            Toast.makeText(requireContext(), "در حال پخش…", Toast.LENGTH_SHORT).show()
-                        } catch (e: Exception) { b.tvTtsStatus.text = "فایل ساخته شد اما پخش ناموفق: ${e.message}" }
+                        } catch (e: Exception) { Toast.makeText(requireContext(), "فايل ساخته شد اما پخش ناموفق: ${e.message}", Toast.LENGTH_SHORT).show() }
                         b.btnSaveAudio.visibility = View.VISIBLE
-                        b.btnSaveAudio.setOnClickListener {
-                            Toast.makeText(requireContext(), "ذخیره شد در Downloads/VortexTTS", Toast.LENGTH_LONG).show()
-                        }
                     } else {
-                        b.tvTtsStatus.text = "✗ خطا: ${res.exceptionOrNull()?.message}"
+                        Toast.makeText(requireContext(), "✗ خطا: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
                     }
                 } catch (e: Exception) {
                     b.progressTts.visibility = View.GONE; b.btnPlay.isEnabled = true
-                    b.tvTtsStatus.text = "✗ ${e.message}"
+                    Toast.makeText(requireContext(), "✗ ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
 
         b.btnSaveAudio.setOnClickListener {
             val f = lastFile
-            if (f == null) { Toast.makeText(requireContext(), "فایلی برای ذخیره نیست", Toast.LENGTH_SHORT).show(); return@setOnClickListener }
+            if (f == null) { Toast.makeText(requireContext(), "فايلي براي ذخيره نيست", Toast.LENGTH_SHORT).show(); return@setOnClickListener }
             val uri = AudioUtils.saveToDownloads(requireContext(), f, f.name)
-            Toast.makeText(requireContext(), if (uri != null) "ذخیره شد: $uri" else "ذخیره ناموفق", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), if (uri != null) "ذخيره شد: $uri" else "ذخيره ناموفق", Toast.LENGTH_LONG).show()
         }
 
         return b.root
