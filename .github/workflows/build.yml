@@ -8,23 +8,48 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - name: Build Debug APK
+          java-version: 17
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Rename APK to VortexTTS.apk
         run: |
-          chmod +x gradlew || true
-          if [ -f gradlew ]; then ./gradlew assembleDebug; else gradle assembleDebug; fi
-      - uses: actions/upload-artifact@v4
+          APK=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          echo "Found APK: $APK"
+          ls -lh app/build/outputs/apk/release/
+          cp "$APK" VortexTTS.apk
+          ls -lh VortexTTS.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: vortex-tts-debug
-          path: app/build/outputs/apk/debug/*.apk
-      - name: Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
+          name: VortexTTS
+          path: VortexTTS.apk
+          if-no-files-found: error
+
+      - name: Create Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/debug/*.apk
+          tag_name: v1.0.0
+          name: Vortex TTS v1.0.0
+          files: VortexTTS.apk
+          generate_release_notes: true
