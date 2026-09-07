@@ -53,6 +53,7 @@ class KeyFragment : Fragment() {
             binding.continueButton.visibility = View.VISIBLE
             showStatus("کلید ذخیره‌شده یافت شد؛ می‌توانید ادامه دهید یا اتصال را دوباره تست کنید.", true)
         }
+        binding.backButton.setOnClickListener { parentFragmentManager.popBackStack() }
         binding.testButton.setOnClickListener { testConnection() }
         binding.continueButton.setOnClickListener {
             if (secureStorage.getApiKey().isNullOrBlank()) {
