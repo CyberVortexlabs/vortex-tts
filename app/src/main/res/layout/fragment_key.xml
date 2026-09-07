@@ -53,9 +53,9 @@
                 android:layout_width="92dp"
                 android:layout_height="92dp"
                 android:layout_marginTop="16dp"
-                android:src="@drawable/ic_vortex"
-                android:padding="12dp"
-                android:background="@drawable/bg_glass_card"
+                android:src="@mipmap/ic_launcher"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true"
                 android:contentDescription="Vortex TTS" />
 
             <TextView

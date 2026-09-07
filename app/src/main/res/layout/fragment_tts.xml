@@ -216,39 +216,48 @@
                     android:fontFamily="@font/vazirmatn_bold"
                     android:textColor="@color/cosmic_text" />
 
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/voiceChips"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    app:singleSelection="true">
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/voiceAutoChip"
-                        android:checkable="true"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checked="true"
-                        android:text="@string/auto" />
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/voiceFemaleChip"
-                        android:checkable="true"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/female" />
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/voiceMaleChip"
-                        android:checkable="true"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/male" />
-                </com.google.android.material.chip.ChipGroup>
-
                 <Spinner
                     android:id="@+id/directVoiceSpinner"
                     android:layout_width="match_parent"
                     android:layout_height="52dp"
                     android:layout_marginTop="10dp"
                     android:background="@drawable/bg_secondary_button" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <Button
+                        android:id="@+id/previewVoiceButton"
+                        android:layout_width="0dp"
+                        android:layout_height="52dp"
+                        android:layout_weight="1"
+                        android:text="تست صدا"
+                        android:textAllCaps="false"
+                        android:fontFamily="@font/vazirmatn_bold"
+                        android:textColor="@color/cosmic_text"
+                        android:background="@drawable/bg_secondary_button" />
+
+                    <ProgressBar
+                        android:id="@+id/voicePreviewProgress"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_marginStart="12dp"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/voicePreviewStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/vazirmatn_regular"
+                    android:textColor="@color/cosmic_text_secondary"
+                    android:visibility="gone" />
             </LinearLayout>
 
             <LinearLayout

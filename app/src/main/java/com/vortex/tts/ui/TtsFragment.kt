@@ -28,13 +28,12 @@ import com.vortex.tts.data.GeminiRepository
 import com.vortex.tts.data.GeminiResult
 import com.vortex.tts.data.SecureStorage
 import com.vortex.tts.databinding.FragmentTtsBinding
+import com.vortex.tts.model.GeminiVoices
 import com.vortex.tts.model.SupportedTtsModels
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -46,10 +45,11 @@ class TtsFragment : Fragment() {
     private val repository by lazy { GeminiRepository(GeminiClient.api) }
     private lateinit var secureStorage: SecureStorage
     private val audioPlayer = AudioPlayer()
+    private val previewPlayer = AudioPlayer()
 
     private var generatedFile: File? = null
     private var generatedFingerprint: String? = null
-    private var directVoice: String = VOICE_FEMALE
+    private var directVoice: String = GeminiVoices.DEFAULT_VOICE
     private var pendingDownloadAfterPermission = false
 
     private val writePermissionLauncher = registerForActivityResult(
@@ -85,14 +85,13 @@ class TtsFragment : Fragment() {
         val voiceAdapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_dropdown_item,
-            VOICES
+            GeminiVoices.VOICES
         )
         binding.directVoiceSpinner.adapter = voiceAdapter
-        binding.directVoiceSpinner.setSelection(VOICES.indexOf(VOICE_FEMALE).coerceAtLeast(0), false)
+        binding.directVoiceSpinner.setSelection(GeminiVoices.VOICES.indexOf(GeminiVoices.DEFAULT_VOICE).coerceAtLeast(0), false)
         binding.directVoiceSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                directVoice = VOICES[position]
-                syncVoiceChips(directVoice)
+                directVoice = GeminiVoices.VOICES[position]
                 invalidateGeneratedAudio()
             }
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
@@ -111,14 +110,11 @@ class TtsFragment : Fragment() {
         binding.chipSerious.setOnClickListener { setStyle("با صدای آرام و جدی") }
         binding.chipWhisper.setOnClickListener { setStyle("به صورت نجوا") }
 
-        // Voice mapping: male -> Charon (deep), female/auto -> Kore
-        binding.voiceAutoChip.setOnClickListener { selectVoice(VOICE_FEMALE, binding.voiceAutoChip.id) }
-        binding.voiceFemaleChip.setOnClickListener { selectVoice(VOICE_FEMALE, binding.voiceFemaleChip.id) }
-        binding.voiceMaleChip.setOnClickListener { selectVoice(VOICE_MALE, binding.voiceMaleChip.id) }
-
         binding.loudAutoChip.setOnClickListener { invalidateGeneratedAudio() }
         binding.loudNormalChip.setOnClickListener { invalidateGeneratedAudio() }
         binding.loudLoudChip.setOnClickListener { invalidateGeneratedAudio() }
+
+        binding.previewVoiceButton.setOnClickListener { previewSelectedVoice() }
 
         binding.modelSpinner.adapter = ArrayAdapter(
             requireContext(),
@@ -175,38 +171,9 @@ class TtsFragment : Fragment() {
         binding.styleEditText.setSelection(binding.styleEditText.text?.length ?: 0)
     }
 
-    /**
-     * Single source of truth for the voice sent to the API: always read the
-     * spinner's current selection (male -> Charon deep, female/auto -> Kore). The cached
-     * [directVoice] is only a fallback for when the view is gone.
-     */
     private fun selectedVoice(): String {
         val spinnerVoice = _binding?.directVoiceSpinner?.selectedItem?.toString()
-        return if (spinnerVoice != null && spinnerVoice in VOICES) spinnerVoice else directVoice
-    }
-
-    private fun selectVoice(voice: String, chipId: Int) {
-        binding.voiceChips.check(chipId)
-        val index = VOICES.indexOf(voice).coerceAtLeast(0)
-        binding.directVoiceSpinner.setSelection(index, true)
-        directVoice = voice
-        invalidateGeneratedAudio()
-    }
-
-    private fun syncVoiceChips(voice: String) {
-        _binding?.let {
-            when (voice) {
-                VOICE_MALE, VOICE_MALE_ALT -> it.voiceChips.check(it.voiceMaleChip.id)
-                VOICE_FEMALE -> {
-                    // Kore is used for both auto and female. Preserve auto if it was selected.
-                    if (it.voiceMaleChip.isChecked) it.voiceChips.check(it.voiceFemaleChip.id)
-                    // if auto was checked, keep it; if female checked, keep it
-                }
-                else -> {
-                    // Other voices: clear to avoid stale mapping, but don't force
-                }
-            }
-        }
+        return if (spinnerVoice != null && spinnerVoice in GeminiVoices.VOICES) spinnerVoice else directVoice
     }
 
     private fun selectedModel(): String {
@@ -224,17 +191,93 @@ class TtsFragment : Fragment() {
             binding.loudLoudChip.isChecked -> "با صدای بلند و پرانرژی بخوان."
             else -> ""
         }
-        // Deep male voice hint when male selected (Charon/Fenrir/Puck are male voices)
-        val voice = selectedVoice()
-        val isMale = voice == VOICE_MALE || voice == VOICE_MALE_ALT || voice == "Charon" || voice == "Fenrir"
-        val deepMaleHint = if (isMale) "با صدای مردانه کلفت و بم" else ""
-        // Persian accent hint: if text contains Persian chars, prepend natural Persian prompt
         val persianRegex = Regex("[\u0600-\u06FF]")
         val text = if (persianRegex.containsMatchIn(rawText)) "با لحجه فارسی طبیعی و روان بخوان: $rawText" else rawText
-        return listOf(style, loud, deepMaleHint, text).filter { it.isNotBlank() }.joinToString("\n")
+        return listOf(style, loud, text).filter { it.isNotBlank() }.joinToString("\n")
     }
 
     private fun containsPersian(s: String): Boolean = Regex("[\u0600-\u06FF]").containsMatchIn(s)
+
+    private fun previewSelectedVoice() {
+        val key = secureStorage.getApiKey()
+        if (key.isNullOrBlank()) {
+            showStatus("کلید API پیدا نشد. از بخش تنظیمات کلید را وارد کنید.", false)
+            return
+        }
+        val voice = selectedVoice()
+        val model = selectedModel()
+        val previewText = if (containsPersian(binding.textEditText.text?.toString().orEmpty())) {
+            GeminiVoices.PREVIEW_TEXT
+        } else {
+            GeminiVoices.PREVIEW_TEXT_EN
+        }
+        // If user typed text, preview that text with selected voice for context, otherwise use default preview
+        val textToPreview = binding.textEditText.text?.toString()?.trim()?.takeIf { it.isNotBlank() }?.let {
+            // short preview: first 100 chars to avoid long generation
+            if (it.length > 120) it.take(120) else it
+        } ?: previewText
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            setPreviewBusy(true)
+            try {
+                when (val result = repository.generatePcm(key, model, textToPreview, voice)) {
+                    is GeminiResult.Success -> {
+                        if (result.value.isEmpty() || result.value.size % 2 != 0) {
+                            showPreviewStatus("داده صوتی معتبر نیست.", false)
+                        } else {
+                            val dir = File(requireContext().cacheDir, "vortex_tts_preview").apply { mkdirs() }
+                            val file = File(dir, "preview_${voice}_${System.currentTimeMillis()}.wav")
+                            withContext(Dispatchers.IO) { PcmToWav.toWavFile(result.value, file) }
+                            playPreview(file)
+                            showPreviewStatus("پیش‌نمایش $voice پخش شد.", true)
+                        }
+                    }
+                    is GeminiResult.Failure -> {
+                        showPreviewStatus(errorMessage(result.error), false)
+                    }
+                }
+            } finally {
+                setPreviewBusy(false)
+            }
+        }
+    }
+
+    private fun playPreview(file: File) {
+        previewPlayer.stop()
+        previewPlayer.play(
+            file = file,
+            onCompletion = {
+                _binding?.previewVoiceButton?.text = getString(R.string.play)
+            },
+            onError = {
+                _binding?.let {
+                    showPreviewStatus("پخش پیش‌نمایش ناموفق بود.", false)
+                }
+            }
+        )
+    }
+
+    private fun setPreviewBusy(busy: Boolean) {
+        _binding?.let {
+            it.voicePreviewProgress.visibility = if (busy) View.VISIBLE else View.GONE
+            it.previewVoiceButton.isEnabled = !busy
+            it.voicePreviewStatus.visibility = if (busy) View.VISIBLE else it.voicePreviewStatus.visibility
+            if (busy) {
+                it.voicePreviewStatus.text = "در حال تولید پیش‌نمایش..."
+                it.voicePreviewStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.cosmic_text_secondary))
+                it.voicePreviewStatus.visibility = View.VISIBLE
+            }
+        }
+    }
+
+    private fun showPreviewStatus(message: String, success: Boolean) {
+        _binding?.let {
+            it.voicePreviewStatus.text = message
+            it.voicePreviewStatus.visibility = View.VISIBLE
+            val color = if (success) R.color.cosmic_success else R.color.cosmic_error
+            it.voicePreviewStatus.setTextColor(ContextCompat.getColor(requireContext(), color))
+        }
+    }
 
     /** Generate audio and reveal the voice bubble. Never auto-plays. */
     private fun generateOnly() {
@@ -285,7 +328,6 @@ class TtsFragment : Fragment() {
     }
 
     private fun formatDuration(wavFile: File): String {
-        // 24kHz 16-bit mono => 48000 bytes of PCM per second (44-byte WAV header).
         val seconds = ((wavFile.length() - 44).coerceAtLeast(0) / 48000).toInt()
         return if (seconds >= 60) "%d:%02d".format(seconds / 60, seconds % 60)
         else "%d ثانیه".format(seconds)
@@ -316,18 +358,12 @@ class TtsFragment : Fragment() {
             val result = runCatching {
                 val stamp = SimpleDateFormat("yyyy-MM-dd_HHmmss", Locale.US).format(Date())
                 val fileName = "VortexTTS_$stamp.mp3"
-                // Convert WAV -> MP3 bytes
                 val mp3Bytes = withContext(Dispatchers.IO) {
-                    // Extract PCM and try MP3 encode; fallback to WAV bytes with mp3 mime if encoder unavailable
                     val all = wavFile.readBytes()
                     val pcm = if (all.size > 44 && all[0].toInt().toChar() == 'R') all.copyOfRange(44, all.size) else all
-                    Mp3Encoder.pcmToMp3(pcm) ?: all // fallback: save WAV content as .mp3 (will still play on most handlers, or keep wav header)
+                    Mp3Encoder.pcmToMp3(pcm) ?: all
                 }
-                // For fallback WAV content saved as .mp3, we include WAV header so MediaPlayer can decode via sniff.
-                // If we got true MP3 bytes, they are raw MP3 frames.
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    val mime = if (mp3Bytes.size > 4 && mp3Bytes[0].toInt().toChar() == 'R') "audio/wav" else "audio/mpeg"
-                    // Always use audio/mpeg for .mp3; but if fallback WAV, use audio/mpeg anyway so extension matches
                     val effectiveMime = "audio/mpeg"
                     val values = ContentValues().apply {
                         put(MediaStore.Downloads.DISPLAY_NAME, fileName)
@@ -353,7 +389,7 @@ class TtsFragment : Fragment() {
                 } else {
                     val directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                     val destination = File(directory, fileName)
-                    FileOutputStream(destination).use { it.write(mp3Bytes) }
+                    java.io.FileOutputStream(destination).use { it.write(mp3Bytes) }
                     Uri.fromFile(destination)
                 }
             }
@@ -412,6 +448,7 @@ class TtsFragment : Fragment() {
     private fun invalidateGeneratedAudio() {
         generatedFingerprint = null
         audioPlayer.stop()
+        previewPlayer.stop()
         _binding?.let {
             it.voiceBubbleCard.visibility = View.GONE
             it.bubblePlayButton.text = getString(R.string.play)
@@ -428,6 +465,7 @@ class TtsFragment : Fragment() {
             it.styleEditText.isEnabled = !busy
             it.modelSpinner.isEnabled = !busy
             it.directVoiceSpinner.isEnabled = !busy
+            it.previewVoiceButton.isEnabled = !busy
         }
     }
 
@@ -464,6 +502,7 @@ class TtsFragment : Fragment() {
 
     override fun onDestroyView() {
         audioPlayer.release()
+        previewPlayer.release()
         generatedFile?.delete()
         generatedFile = null
         _binding = null
@@ -471,10 +510,6 @@ class TtsFragment : Fragment() {
     }
 
     companion object {
-        const val VOICE_FEMALE = "Kore"
-        const val VOICE_MALE = "Charon"
-        const val VOICE_MALE_ALT = "Puck"
-        private val VOICES = listOf("Kore", "Charon", "Puck", "Fenrir", "Aoede", "Leda", "Orus", "Zephyr")
         fun newInstance() = TtsFragment()
     }
 }

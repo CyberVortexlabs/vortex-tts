@@ -53,3 +53,17 @@ data class InlineData(
     @SerializedName("mimeType") val mimeType: String? = null,
     @SerializedName("data") val data: String? = null
 )
+
+object GeminiVoices {
+    const val DEFAULT_VOICE = "Kore"
+    const val PREVIEW_TEXT = "سلام، این پیش‌نمایش صدا است."
+    const val PREVIEW_TEXT_EN = "Hello, this is a voice preview."
+
+    val VOICES = listOf(
+        "Kore", "Puck", "Charon", "Fenrir", "Aoede", "Achernar", "Algenib", "Despina",
+        "Erinome", "Gacrux", "Iapetus", "Leda", "Orus", "Sulafat", "Zephyr",
+        "Achird", "Algieba", "Alnilam", "Autonoe", "Callirrhoe", "Enceladus",
+        "Laomedeia", "Pulcherrima", "Rasalgethi", "Schedar", "Umbriel",
+        "Vindemiatrix", "Sadachbia", "Sadaltager", "Zubenelgenubi"
+    )
+}
