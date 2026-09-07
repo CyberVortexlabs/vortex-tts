@@ -30,19 +30,32 @@ jobs:
       - name: Build Release APK
         run: ./gradlew assembleRelease --stacktrace
 
-      - name: Rename APK to VortexTTS.apk
-        run: |
-          APK=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
-          echo "Found APK: $APK"
-          ls -lh app/build/outputs/apk/release/
-          cp "$APK" VortexTTS.apk
-          ls -lh VortexTTS.apk
+      - name: Build Debug APK (signed)
+        run: ./gradlew assembleDebug --stacktrace
 
-      - name: Upload APK artifact
+      - name: Rename APKs
+        run: |
+          REL_APK=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          DBG_APK=$(find app/build/outputs/apk/debug -name "*.apk" | head -n 1)
+          echo "Found release APK: $REL_APK"
+          echo "Found debug APK: $DBG_APK"
+          ls -lh app/build/outputs/apk/release/ || true
+          ls -lh app/build/outputs/apk/debug/ || true
+          cp "$REL_APK" VortexTTS.apk
+          cp "$DBG_APK" VortexTTS-debug.apk
+          ls -lh VortexTTS*.apk
+          # verify debug APK is signed (should have META-INF)
+          unzip -l VortexTTS-debug.apk | grep -i META-INF || echo "no META-INF"
+          # verify with apksigner if available
+          if command -v apksigner >/dev/null 2>&1; then apksigner verify --print-certs VortexTTS-debug.apk || true; fi
+
+      - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: VortexTTS
-          path: VortexTTS.apk
+          name: VortexTTS-all
+          path: |
+            VortexTTS.apk
+            VortexTTS-debug.apk
           if-no-files-found: error
 
       - name: Create Release
@@ -51,5 +64,7 @@ jobs:
         with:
           tag_name: v1.0.0
           name: Vortex TTS v1.0.0
-          files: VortexTTS.apk
+          files: |
+            VortexTTS.apk
+            VortexTTS-debug.apk
           generate_release_notes: true
