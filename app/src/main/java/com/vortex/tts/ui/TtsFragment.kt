@@ -199,21 +199,52 @@ class TtsFragment : Fragment() {
     private fun containsPersian(s: String): Boolean = Regex("[\u0600-\u06FF]").containsMatchIn(s)
 
     private fun previewSelectedVoice() {
-        val key = secureStorage.getApiKey()
-        if (key.isNullOrBlank()) {
-            showStatus("کلید API پیدا نشد. از بخش تنظیمات کلید را وارد کنید.", false)
+        if (previewPlayer.isPlaying()) {
+            previewPlayer.stop()
+            _binding?.previewVoiceButton?.text = getString(R.string.play)
+            showPreviewStatus("پخش متوقف شد.", true)
             return
         }
+        // Offline-first: try bundled raw asset, fallback to network only if missing
+        previewPlayer.stop()
+        audioPlayer.stop()
         val voice = selectedVoice()
+        val resName = GeminiVoices.rawResName(voice)
+        val resId = resources.getIdentifier(resName, "raw", requireContext().packageName)
+        if (resId != 0) {
+            // Play bundled offline preview immediately, no API key needed
+            setPreviewBusy(false)
+            showPreviewStatus("پیش‌نمایش $voice (آفلاین) در حال پخش…", true)
+            previewPlayer.playRaw(
+                context = requireContext(),
+                resId = resId,
+                onCompletion = {
+                    _binding?.previewVoiceButton?.text = getString(R.string.play)
+                    showPreviewStatus("پیش‌نمایش $voice (آفلاین) پخش شد.", true)
+                },
+                onError = {
+                    _binding?.let {
+                        showPreviewStatus("پخش پیش‌نمایش آفلاین ناموفق بود.", false)
+                    }
+                }
+            )
+            _binding?.previewVoiceButton?.text = getString(R.string.stop)
+            // Toggle to stop on next click
+            return
+        }
+        // Fallback: generate via Gemini API if no bundled asset (requires key)
+        val key = secureStorage.getApiKey()
+        if (key.isNullOrBlank()) {
+            showPreviewStatus("پیش‌نمایش آفلاین یافت نشد و کلید API تنظیم نشده.", false)
+            return
+        }
         val model = selectedModel()
         val previewText = if (containsPersian(binding.textEditText.text?.toString().orEmpty())) {
             GeminiVoices.PREVIEW_TEXT
         } else {
             GeminiVoices.PREVIEW_TEXT_EN
         }
-        // If user typed text, preview that text with selected voice for context, otherwise use default preview
         val textToPreview = binding.textEditText.text?.toString()?.trim()?.takeIf { it.isNotBlank() }?.let {
-            // short preview: first 100 chars to avoid long generation
             if (it.length > 120) it.take(120) else it
         } ?: previewText
 

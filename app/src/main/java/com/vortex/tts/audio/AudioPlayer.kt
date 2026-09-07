@@ -1,5 +1,6 @@
 package com.vortex.tts.audio
 
+import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import java.io.File
@@ -35,6 +36,39 @@ class AudioPlayer {
         }
         player.setOnPreparedListener { it.start() }
         player.prepareAsync()
+    }
+
+    fun playRaw(context: Context, resId: Int, onCompletion: () -> Unit, onError: () -> Unit) {
+        release()
+        val player = MediaPlayer.create(context, resId) ?: run {
+            onError()
+            return
+        }
+        mediaPlayer = player
+        player.setAudioAttributes(
+            AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .build()
+        )
+        player.setOnCompletionListener {
+            it.reset()
+            it.release()
+            if (mediaPlayer === it) mediaPlayer = null
+            onCompletion()
+        }
+        player.setOnErrorListener { mp, _, _ ->
+            mp.reset()
+            mp.release()
+            if (mediaPlayer === mp) mediaPlayer = null
+            onError()
+            true
+        }
+        try {
+            if (!player.isPlaying) player.start()
+        } catch (_: Exception) {
+            onError()
+        }
     }
 
     fun stop() {
