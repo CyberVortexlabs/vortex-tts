@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Vortex TTS</string>
+    <string name="key_screen_title">Vortex TTS</string>
+    <string name="key_subtitle">Gemini 2.5 TTS • Vortex Glass</string>
+    <string name="hint_api_key">AQ…  (Gemini API Key)</string>
+    <string name="btn_test">تست اتصال</string>
+    <string name="btn_save_key">ذخیره کلید</string>
+    <string name="label_models">مدل‌ها</string>
+    <string name="tts_title">تبدیل متن به گفتار</string>
+    <string name="hint_tts_text">متن را اینجا بنویس…</string>
+    <string name="label_voice">صدا</string>
+    <string name="label_gender">جنسیت: خودکار</string>
+    <string name="label_loudness">بلندی</string>
+    <string name="label_auto">حالت خودکار</string>
+    <string name="hint_style">Style Prompt (اختیاری) — مثلا: آرام، پرانرژی…</string>
+    <string name="btn_play">پخش</string>
+    <string name="btn_save_audio">ذخیره</string>
+</resources>

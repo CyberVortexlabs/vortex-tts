@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.VortexTTS" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="colorPrimary">@color/vortex_purple</item>
+        <item name="colorPrimaryVariant">@color/vortex_top</item>
+        <item name="colorOnPrimary">@color/text_primary</item>
+        <item name="android:fontFamily">@font/vazirmatn_regular</item>
+        <item name="fontFamily">@font/vazirmatn_regular</item>
+    </style>
+    <!-- Glass card theme overlay -->
+    <style name="Theme.VortexTTS.GlassCard">
+        <item name="android:background">@drawable/bg_glass_card</item>
+    </style>
+</resources>
