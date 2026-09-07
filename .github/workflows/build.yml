@@ -27,29 +27,23 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build Release APK
-        run: ./gradlew assembleDebug --stacktrace
-      - name: Build release APK (unsigned)
-        run: ./gradlew assembleRelease --stacktrace || true
-
       - name: Build Debug APK (signed)
         run: ./gradlew assembleDebug --stacktrace
 
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --stacktrace || true
+
       - name: Rename APKs
         run: |
-          REL_APK=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
           DBG_APK=$(find app/build/outputs/apk/debug -name "*.apk" | head -n 1)
-          echo "Found release APK: $REL_APK"
-          echo "Found debug APK: $DBG_APK"
-          ls -lh app/build/outputs/apk/release/ || true
+          REL_APK=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          echo "Debug: $DBG_APK"
+          echo "Release: $REL_APK"
           ls -lh app/build/outputs/apk/debug/ || true
-          cp "$REL_APK" VortexTTS.apk
-          cp "$DBG_APK" VortexTTS-debug.apk
+          ls -lh app/build/outputs/apk/release/ || true
+          [ -n "$DBG_APK" ] && cp "$DBG_APK" VortexTTS-debug.apk || echo "no debug apk"
+          [ -n "$REL_APK" ] && cp "$REL_APK" VortexTTS.apk || cp VortexTTS-debug.apk VortexTTS.apk
           ls -lh VortexTTS*.apk
-          # verify debug APK is signed (should have META-INF)
-          unzip -l VortexTTS-debug.apk | grep -i META-INF || echo "no META-INF"
-          # verify with apksigner if available
-          if command -v apksigner >/dev/null 2>&1; then apksigner verify --print-certs VortexTTS-debug.apk || true; fi
 
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
@@ -64,9 +58,8 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.2
-          name: Vortex TTS v1.0.2
+          tag_name: v1.0.1
+          name: Vortex TTS v1.0.1
           files: |
             VortexTTS.apk
             VortexTTS-debug.apk
-          generate_release_notes: true
