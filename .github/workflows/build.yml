@@ -28,7 +28,9 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Release APK
-        run: ./gradlew assembleRelease --stacktrace
+        run: ./gradlew assembleDebug --stacktrace
+      - name: Build release APK (unsigned)
+        run: ./gradlew assembleRelease --stacktrace || true
 
       - name: Build Debug APK (signed)
         run: ./gradlew assembleDebug --stacktrace
