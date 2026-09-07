@@ -1,17 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="Theme.VortexTTS" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="colorPrimary">@color/vortex_purple</item>
-        <item name="colorPrimaryVariant">@color/vortex_top</item>
-        <item name="colorOnPrimary">@color/text_primary</item>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.VortexTTS" parent="Theme.Material3.Dark.NoActionBar">
         <item name="android:fontFamily">@font/vazirmatn_regular</item>
         <item name="fontFamily">@font/vazirmatn_regular</item>
-    </style>
-    <!-- Glass card theme overlay -->
-    <style name="Theme.VortexTTS.GlassCard">
-        <item name="android:background">@drawable/bg_glass_card</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/cosmic_bg_end</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="colorAccent">@color/cosmic_primary_start</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowDisablePreview">true</item>
     </style>
 </resources>

@@ -1,0 +1,9 @@
+Vortex TTS third-party notices
+
+The bundled Arabic TTF files are Noto Sans Arabic font binaries used as an
+offline-buildable fallback for the requested Vazirmatn UI family. They are
+licensed by Google LLC under the Apache License 2.0. See
+NOTO_SANS_ARABIC_LICENSE.txt.
+
+The Vortex TTS source code itself is not bundled with an API key or backend
+credential.

@@ -1,259 +1,348 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:overScrollMode="never">
+    android:layoutDirection="rtl">
 
-    <LinearLayout
+    <ImageView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="match_parent"
+        android:src="@drawable/bg_cosmic_orbs"
+        android:scaleType="centerCrop"
+        android:alpha="0.82"
+        android:importantForAccessibility="no" />
 
-        <!-- Text Input Card -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardBackgroundColor="@android:color/transparent"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="0dp"
-            app:strokeColor="#1AFFFFFF"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_glass_card"
-                android:orientation="vertical"
-                android:padding="18dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/vazirmatn_regular"
-                    android:text="@string/tts_title"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/tilTtsText"
-                    style="@style/Vortex.Glass.Input"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:hint="@string/hint_tts_text"
-                    app:boxBackgroundColor="#141328A0">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etTtsText"
-                        android:layout_width="match_parent"
-                        android:layout_height="140dp"
-                        android:background="@android:color/transparent"
-                        android:fontFamily="@font/vazirmatn_regular"
-                        android:gravity="top|start"
-                        android:inputType="textMultiLine|textCapSentences"
-                        android:textColor="@color/text_primary"
-                        android:textColorHint="@color/text_hint"
-                        android:textSize="14sp" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <TextView
-                    android:id="@+id/tvCharCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:layout_marginTop="4dp"
-                    android:fontFamily="@font/vazirmatn_regular"
-                    android:text="0 / 5000"
-                    android:textColor="@color/text_hint"
-                    android:textSize="11sp" />
-
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- Voice Controls -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            app:cardBackgroundColor="@android:color/transparent"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="0dp"
-            app:strokeColor="#1AFFFFFF"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_glass_card"
-                android:orientation="vertical"
-                android:padding="18dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/vazirmatn_regular"
-                    android:text="@string/label_voice"
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/chipFemale"
-                        android:layout_width="wrap_content"
-                        android:layout_height="36dp"
-                        android:background="@drawable/bg_glass_chip"
-                        android:fontFamily="@font/vazirmatn_regular"
-                        android:gravity="center"
-                        android:paddingHorizontal="16dp"
-                        android:text="زن"
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:id="@+id/chipMale"
-                        android:layout_width="wrap_content"
-                        android:layout_height="36dp"
-                        android:layout_marginStart="8dp"
-                        android:background="@drawable/bg_glass_chip"
-                        android:fontFamily="@font/vazirmatn_regular"
-                        android:gravity="center"
-                        android:paddingHorizontal="16dp"
-                        android:text="مرد"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:id="@+id/chipAuto"
-                        android:layout_width="wrap_content"
-                        android:layout_height="36dp"
-                        android:layout_marginStart="8dp"
-                        android:background="@drawable/btn_vortex_primary"
-                        android:fontFamily="@font/vazirmatn_regular"
-                        android:gravity="center"
-                        android:paddingHorizontal="16dp"
-                        android:text="@string/label_auto"
-                        android:textColor="#FFFFFF"
-                        android:textSize="13sp" />
-
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:fontFamily="@font/vazirmatn_regular"
-                    android:text="@string/label_loudness"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
-
-                <com.google.android.material.slider.Slider
-                    android:id="@+id/sliderLoudness"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:value="0.8"
-                    android:valueFrom="0.0"
-                    android:valueTo="1.0"
-                    app:thumbColor="@color/vortex_purple" />
-
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- Style Prompt -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            app:cardBackgroundColor="@android:color/transparent"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="0dp"
-            app:strokeColor="#1AFFFFFF"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_glass_card"
-                android:orientation="vertical"
-                android:padding="18dp">
-
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Vortex.Glass.Input"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/hint_style"
-                    app:boxBackgroundColor="#141328A0">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etStylePrompt"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@android:color/transparent"
-                        android:fontFamily="@font/vazirmatn_regular"
-                        android:inputType="text"
-                        android:textColor="@color/text_primary"
-                        android:textColorHint="@color/text_hint"
-                        android:textSize="14sp" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- Action buttons -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:clipToPadding="false">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:orientation="horizontal"
-            android:weightSum="2">
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="30dp"
+            android:paddingBottom="30dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/brand_title"
+                        android:textSize="25sp"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/vazirmatn_bold"
+                        android:textColor="@color/cosmic_text" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="تبدیل متن به صدای طبیعی"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/vazirmatn_regular"
+                        android:textColor="@color/cosmic_text_secondary" />
+                </LinearLayout>
+                <ImageButton
+                    android:id="@+id/changeKeyButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_secondary_button"
+                    android:padding="12dp"
+                    android:src="@drawable/ic_tune"
+                    android:contentDescription="@string/change_api_key" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="@drawable/bg_glass_card">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/textInputLayout"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/text_hint"
+                    app:boxCornerRadiusTopStart="16dp"
+                    app:boxCornerRadiusTopEnd="16dp"
+                    app:boxCornerRadiusBottomStart="16dp"
+                    app:boxCornerRadiusBottomEnd="16dp">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/textEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="190dp"
+                        android:gravity="top|start"
+                        android:inputType="textMultiLine|textCapSentences"
+                        android:maxLength="5000"
+                        android:fontFamily="@font/vazirmatn_regular" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <TextView
+                    android:id="@+id/charCounter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7dp"
+                    android:gravity="end"
+                    android:text="0 / 5000"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/vazirmatn_medium"
+                    android:textColor="@color/cosmic_text_secondary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:padding="16dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_glass_card">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/style_prompt"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/vazirmatn_bold"
+                    android:textColor="@color/cosmic_text" />
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/styleEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="9dp"
+                    android:minHeight="56dp"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:hint="@string/style_hint"
+                    android:inputType="textMultiLine|textCapSentences"
+                    android:maxLines="3"
+                    android:background="@drawable/bg_input"
+                    android:fontFamily="@font/vazirmatn_regular" />
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="11dp"
+                    android:scrollbars="none">
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/styleChips"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:singleLine="true">
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipHappy"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/sample_happy" />
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipCalm"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/sample_calm" />
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipEpic"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/sample_epic" />
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipFormal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/sample_formal" />
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipSerious"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/sample_serious" />
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipWhisper"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/sample_whisper" />
+                    </com.google.android.material.chip.ChipGroup>
+                </HorizontalScrollView>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:padding="16dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_glass_card">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/voice"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/vazirmatn_bold"
+                    android:textColor="@color/cosmic_text" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/voiceChips"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    app:singleSelection="true">
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/voiceAutoChip"
+                        android:checkable="true"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="@string/auto" />
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/voiceFemaleChip"
+                        android:checkable="true"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/female" />
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/voiceMaleChip"
+                        android:checkable="true"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/male" />
+                </com.google.android.material.chip.ChipGroup>
+
+                <Spinner
+                    android:id="@+id/directVoiceSpinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_secondary_button" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:padding="16dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_glass_card">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/loudness"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/vazirmatn_bold"
+                    android:textColor="@color/cosmic_text" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/loudnessChips"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    app:singleSelection="true">
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/loudAutoChip"
+                        android:checkable="true"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="@string/auto" />
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/loudNormalChip"
+                        android:checkable="true"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/normal" />
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/loudLoudChip"
+                        android:checkable="true"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/loud" />
+                </com.google.android.material.chip.ChipGroup>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:padding="16dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_glass_card">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/model"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/vazirmatn_bold"
+                    android:textColor="@color/cosmic_text" />
+                <Spinner
+                    android:id="@+id/modelSpinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="7dp"
+                    android:background="@drawable/bg_secondary_button" />
+            </LinearLayout>
 
             <TextView
-                android:id="@+id/btnPlay"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_marginEnd="8dp"
-                android:layout_weight="1"
-                android:background="@drawable/btn_vortex_primary"
-                android:elevation="6dp"
-                android:fontFamily="@font/vazirmatn_regular"
+                android:id="@+id/operationStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:gravity="center"
-                android:text="@string/btn_play"
-                android:textColor="#FFFFFF"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textSize="14sp"
+                android:visibility="gone"
+                android:fontFamily="@font/vazirmatn_medium" />
 
-            <TextView
-                android:id="@+id/btnSaveAudio"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:background="@drawable/bg_glass_chip"
-                android:fontFamily="@font/vazirmatn_regular"
-                android:gravity="center"
-                android:text="@string/btn_save_audio"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp" />
+            <ProgressBar
+                android:id="@+id/ttsProgress"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
+                android:visibility="gone" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:weightSum="2">
+                <Button
+                    android:id="@+id/playButton"
+                    android:layout_width="0dp"
+                    android:layout_height="58dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:text="@string/play"
+                    android:textAllCaps="false"
+                    android:fontFamily="@font/vazirmatn_bold"
+                    android:textColor="@color/cosmic_text"
+                    android:background="@drawable/bg_primary_button" />
+                <Button
+                    android:id="@+id/saveButton"
+                    android:layout_width="0dp"
+                    android:layout_height="58dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/save_audio"
+                    android:textAllCaps="false"
+                    android:fontFamily="@font/vazirmatn_bold"
+                    android:textColor="@color/cosmic_text"
+                    android:background="@drawable/bg_secondary_button" />
+            </LinearLayout>
         </LinearLayout>
-
-        <ProgressBar
-            android:id="@+id/progressTts"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_gravity="center"
-            android:layout_marginTop="12dp"
-            android:visibility="gone" />
-
-    </LinearLayout>
-</ScrollView>
+    </ScrollView>
+</FrameLayout>

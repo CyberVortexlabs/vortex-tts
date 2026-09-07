@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="voice_names">
+        <item>Kore</item>
+        <item>Puck</item>
+        <item>Charon</item>
+        <item>Fenrir</item>
+        <item>Aoede</item>
+        <item>Leda</item>
+        <item>Orus</item>
+        <item>Zephyr</item>
+    </string-array>
+</resources>

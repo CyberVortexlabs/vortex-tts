@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <dimen name="glass_radius">20dp</dimen>
-    <dimen name="glass_stroke">1dp</dimen>
-    <dimen name="btn_radius">16dp</dimen>
-    <dimen name="card_elevation">0dp</dimen>
-</resources>

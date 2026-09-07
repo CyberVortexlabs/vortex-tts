@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="vortex_top">#1a0b2e</color>
-    <color name="vortex_bottom">#0f2027</color>
-    <color name="vortex_purple">#7C3AED</color>
-    <color name="vortex_blue">#2563EB</color>
-    <color name="vortex_cyan">#06B6D4</color>
-    <color name="vortex_bg">#0B0F1A</color>
-    <color name="glass_fill">#1E1B2E8A</color>
-    <color name="glass_stroke">#33FFFFFF</color>
-    <color name="text_primary">#F1F5F9</color>
-    <color name="text_secondary">#94A3B8</color>
-    <color name="text_hint">#64748B</color>
-    <color name="accent_start">#7C3AED</color>
-    <color name="accent_end">#2563EB</color>
+    <color name="cosmic_bg_start">#1A0B2E</color>
+    <color name="cosmic_bg_end">#0F2027</color>
+    <color name="cosmic_surface">#1E1B2E</color>
+    <color name="cosmic_surface_alpha">#8A1E1B2E</color>
+    <color name="cosmic_border">#1AFFFFFF</color>
+    <color name="cosmic_primary_start">#7C3AED</color>
+    <color name="cosmic_primary_end">#2563EB</color>
+    <color name="cosmic_text">#F8FAFC</color>
+    <color name="cosmic_text_secondary">#B8B4C8</color>
+    <color name="cosmic_success">#72E3A6</color>
+    <color name="cosmic_error">#FF8B9E</color>
+    <color name="cosmic_warning">#FFD580</color>
 </resources>
