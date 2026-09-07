@@ -10,7 +10,7 @@
         android:layout_height="match_parent"
         android:src="@drawable/bg_cosmic_orbs"
         android:scaleType="centerCrop"
-        android:alpha="0.82"
+        android:alpha="1.0"
         android:importantForAccessibility="no" />
 
     <ScrollView
@@ -62,6 +62,19 @@
                     android:src="@drawable/ic_tune"
                     android:contentDescription="@string/change_api_key" />
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/keyWarning"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:padding="12dp"
+                android:background="@drawable/bg_glass_card"
+                android:text="کلید API تنظیم نشده؛ برای کیفیت بهتر کلید خود را وارد کنید."
+                android:textSize="13sp"
+                android:fontFamily="@font/vazirmatn_medium"
+                android:textColor="@color/cosmic_warning"
+                android:visibility="gone" />
 
             <LinearLayout
                 android:layout_width="match_parent"

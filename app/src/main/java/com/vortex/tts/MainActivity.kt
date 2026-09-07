@@ -27,16 +27,7 @@ class MainActivity : AppCompatActivity(), KeyFragment.Callbacks {
         secureStorage = SecureStorage(this)
 
         if (savedInstanceState == null) {
-            showInitialScreen()
-        }
-    }
-
-    private fun showInitialScreen() {
-        // Key screen stays the default entry; a saved key skips it smoothly.
-        if (!secureStorage.getApiKey().isNullOrBlank()) {
             showTts()
-        } else {
-            showKeyScreen()
         }
     }
 
@@ -65,5 +56,4 @@ class MainActivity : AppCompatActivity(), KeyFragment.Callbacks {
             .addToBackStack(null)
             .commit()
     }
-
 }

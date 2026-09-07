@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="cosmic_bg_start">#1A0B2E</color>
-    <color name="cosmic_bg_end">#0F2027</color>
+    <color name="cosmic_bg_start">#0F0A1E</color>
+    <color name="cosmic_bg_end">#1A0B2E</color>
     <color name="cosmic_surface">#1E1B2E</color>
     <color name="cosmic_surface_alpha">#8A1E1B2E</color>
     <color name="cosmic_border">#1AFFFFFF</color>

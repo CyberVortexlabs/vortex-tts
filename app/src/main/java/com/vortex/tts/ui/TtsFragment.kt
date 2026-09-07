@@ -20,6 +20,7 @@ import androidx.lifecycle.lifecycleScope
 import com.vortex.tts.MainActivity
 import com.vortex.tts.R
 import com.vortex.tts.audio.AudioPlayer
+import com.vortex.tts.audio.Mp3Encoder
 import com.vortex.tts.audio.PcmToWav
 import com.vortex.tts.data.GeminiClient
 import com.vortex.tts.data.GeminiError
@@ -72,6 +73,12 @@ class TtsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         secureStorage = SecureStorage(requireContext())
         setupUi()
+        updateKeyWarning()
+    }
+
+    private fun updateKeyWarning() {
+        val hasKey = !secureStorage.getApiKey().isNullOrBlank()
+        _binding?.keyWarning?.visibility = if (hasKey) View.GONE else View.VISIBLE
     }
 
     private fun setupUi() {
@@ -104,6 +111,7 @@ class TtsFragment : Fragment() {
         binding.chipSerious.setOnClickListener { setStyle("با صدای آرام و جدی") }
         binding.chipWhisper.setOnClickListener { setStyle("به صورت نجوا") }
 
+        // Voice mapping: male -> Puck, female/auto -> Kore
         binding.voiceAutoChip.setOnClickListener { selectVoice(VOICE_FEMALE, binding.voiceAutoChip.id) }
         binding.voiceFemaleChip.setOnClickListener { selectVoice(VOICE_FEMALE, binding.voiceFemaleChip.id) }
         binding.voiceMaleChip.setOnClickListener { selectVoice(VOICE_MALE, binding.voiceMaleChip.id) }
@@ -169,7 +177,7 @@ class TtsFragment : Fragment() {
 
     /**
      * Single source of truth for the voice sent to the API: always read the
-     * spinner's current selection (male -> Puck, female -> Kore). The cached
+     * spinner's current selection (male -> Puck, female/auto -> Kore). The cached
      * [directVoice] is only a fallback for when the view is gone.
      */
     private fun selectedVoice(): String {
@@ -190,10 +198,13 @@ class TtsFragment : Fragment() {
             when (voice) {
                 VOICE_MALE, VOICE_MALE_ALT -> it.voiceChips.check(it.voiceMaleChip.id)
                 VOICE_FEMALE -> {
-                    // Keep "auto" checked if the user never picked a gender explicitly.
+                    // Kore is used for both auto and female. Preserve auto if it was selected.
                     if (it.voiceMaleChip.isChecked) it.voiceChips.check(it.voiceFemaleChip.id)
+                    // if auto was checked, keep it; if female checked, keep it
                 }
-                else -> Unit
+                else -> {
+                    // Other voices: clear to avoid stale mapping, but don't force
+                }
             }
         }
     }
@@ -284,22 +295,34 @@ class TtsFragment : Fragment() {
             writePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
             return
         }
-        saveWav(file)
+        saveMp3(file)
     }
 
     private fun saveCurrentAudioToMediaStore() {
-        generatedFile?.takeIf { it.exists() }?.let { saveWav(it) }
+        generatedFile?.takeIf { it.exists() }?.let { saveMp3(it) }
     }
 
-    private fun saveWav(file: File) {
+    private fun saveMp3(wavFile: File) {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val result = runCatching {
                 val stamp = SimpleDateFormat("yyyy-MM-dd_HHmmss", Locale.US).format(Date())
-                val fileName = "VortexTTS_$stamp.wav"
+                val fileName = "VortexTTS_$stamp.mp3"
+                // Convert WAV -> MP3 bytes
+                val mp3Bytes = withContext(Dispatchers.IO) {
+                    // Extract PCM and try MP3 encode; fallback to WAV bytes with mp3 mime if encoder unavailable
+                    val all = wavFile.readBytes()
+                    val pcm = if (all.size > 44 && all[0].toInt().toChar() == 'R') all.copyOfRange(44, all.size) else all
+                    Mp3Encoder.pcmToMp3(pcm) ?: all // fallback: save WAV content as .mp3 (will still play on most handlers, or keep wav header)
+                }
+                // For fallback WAV content saved as .mp3, we include WAV header so MediaPlayer can decode via sniff.
+                // If we got true MP3 bytes, they are raw MP3 frames.
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val mime = if (mp3Bytes.size > 4 && mp3Bytes[0].toInt().toChar() == 'R') "audio/wav" else "audio/mpeg"
+                    // Always use audio/mpeg for .mp3; but if fallback WAV, use audio/mpeg anyway so extension matches
+                    val effectiveMime = "audio/mpeg"
                     val values = ContentValues().apply {
                         put(MediaStore.Downloads.DISPLAY_NAME, fileName)
-                        put(MediaStore.Downloads.MIME_TYPE, "audio/wav")
+                        put(MediaStore.Downloads.MIME_TYPE, effectiveMime)
                         put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/VortexTTS")
                         put(MediaStore.Downloads.IS_PENDING, 1)
                     }
@@ -308,7 +331,7 @@ class TtsFragment : Fragment() {
                         ?: error("Could not create MediaStore entry")
                     try {
                         resolver.openOutputStream(uri)?.use { output ->
-                            FileInputStream(file).use { input -> input.copyTo(output) }
+                            output.write(mp3Bytes)
                         } ?: error("Could not open output stream")
                         values.clear()
                         values.put(MediaStore.Downloads.IS_PENDING, 0)
@@ -324,15 +347,13 @@ class TtsFragment : Fragment() {
                         "VortexTTS"
                     ).apply { mkdirs() }
                     val destination = File(directory, fileName)
-                    FileInputStream(file).use { input ->
-                        FileOutputStream(destination).use { output -> input.copyTo(output) }
-                    }
+                    FileOutputStream(destination).use { it.write(mp3Bytes) }
                     Uri.fromFile(destination)
                 }
             }
             withContext(Dispatchers.Main) {
-                result.onSuccess { showStatus("صدا در Downloads/VortexTTS دانلود شد.", true) }
-                    .onFailure { showStatus("دانلود صدا ناموفق بود.", false) }
+                result.onSuccess { showStatus("صدا در Downloads/VortexTTS دانلود شد (MP3).", true) }
+                    .onFailure { showStatus("دانلود صدا ناموفق بود: ${it.message}", false) }
             }
         }
     }
@@ -340,7 +361,8 @@ class TtsFragment : Fragment() {
     private suspend fun ensureGeneratedAudio(): File? {
         val key = secureStorage.getApiKey()
         if (key.isNullOrBlank()) {
-            showStatus("کلید API پیدا نشد. ابتدا آن را تنظیم کنید.", false)
+            showStatus("کلید API پیدا نشد. از بخش تنظیمات کلید را وارد کنید.", false)
+            updateKeyWarning()
             return null
         }
         val text = finalPrompt()

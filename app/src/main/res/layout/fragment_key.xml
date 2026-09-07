@@ -10,7 +10,7 @@
         android:layout_height="match_parent"
         android:src="@drawable/bg_cosmic_orbs"
         android:scaleType="centerCrop"
-        android:alpha="0.86"
+        android:alpha="1.0"
         android:importantForAccessibility="no" />
 
     <ScrollView
