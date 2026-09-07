@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.card.MaterialCardView
@@ -103,7 +104,7 @@ class KeyFragment : Fragment() {
                     setTextColor(ContextCompat.getColor(context, R.color.cosmic_text))
                     textSize = 13f
                     setPadding(dp(14), dp(12), dp(14), dp(12))
-                    typeface = ContextCompat.getFont(context, R.font.vazirmatn_medium)
+                    typeface = ResourcesCompat.getFont(context, R.font.vazirmatn_medium)
                 }
                 card.addView(label)
                 binding.modelsList.addView(card)

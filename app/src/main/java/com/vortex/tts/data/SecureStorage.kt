@@ -1,6 +1,8 @@
 package com.vortex.tts.data
 
 import android.content.Context
+import android.content.SharedPreferences
+import androidx.core.content.edit
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
@@ -15,11 +17,11 @@ class SecureStorage(context: Context) {
     }
 
     @Suppress("DEPRECATION")
-    private val preferences by lazy {
+    private val preferences: SharedPreferences by lazy {
         EncryptedSharedPreferences.create(
+            appContext,
             "vortex_tts",
             masterKey,
-            appContext,
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
@@ -28,11 +30,11 @@ class SecureStorage(context: Context) {
     fun getApiKey(): String? = preferences.getString(API_KEY, null)?.trim()?.takeIf { it.isNotEmpty() }
 
     fun saveApiKey(value: String) {
-        preferences.edit().putString(API_KEY, value.trim()).apply()
+        preferences.edit { putString(API_KEY, value.trim()) }
     }
 
     fun clearApiKey() {
-        preferences.edit().remove(API_KEY).apply()
+        preferences.edit { remove(API_KEY) }
     }
 
     companion object {
